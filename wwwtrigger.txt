@@ -1,0 +1,13 @@
+Create database triggerTARgv24;
+use triggerTARgv24;
+Create table linnad(
+linnID int PRIMARY KEY IDENTITY(1,1),
+linnanimi varchar(15),
+rahvaarv int);
+
+Create table logi(
+id int PRIMARY KEY IDENTITY(1,1),
+aeg DATETIME,
+toiming  varchar(100),
+andmed TEXT
+)
