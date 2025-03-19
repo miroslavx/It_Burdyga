@@ -1,13 +1,83 @@
-Create database triggerTARgv24;
-use triggerTARgv24;
-Create table linnad(
-linnID int PRIMARY KEY IDENTITY(1,1),
-linnanimi varchar(15),
-rahvaarv int);
 
-Create table logi(
-id int PRIMARY KEY IDENTITY(1,1),
-aeg DATETIME,
-toiming  varchar(100),
-andmed TEXT
-)
+CREATE DATABASE triggerTARgv24;
+USE triggerTARgv24;
+CREATE TABLE linnad(
+    linnID INT PRIMARY KEY IDENTITY(1,1),
+    linnanimi VARCHAR(15),
+    rahvaarv INT
+);
+
+CREATE TABLE logi(
+    id INT PRIMARY KEY IDENTITY(1,1),
+    aeg DATETIME,
+    toiming VARCHAR(100),
+    andmed TEXT
+);
+
+CREATE TRIGGER LinnaLisamine 
+ON linnad
+AFTER INSERT
+AS
+BEGIN
+INSERT INTO logi(aeg, toiming, andmed)
+SELECT 
+GETDATE(),
+'on tehtud insert käsk',
+CONCAT('Linn: ', inserted.linnanimi, ', Rahvaarv: ', inserted.rahvaarv)
+FROM inserted;
+
+
+INSERT INTO linnad(linnanimi, rahvaarv)
+VALUES ('Tallinn', 600000);
+
+INSERT INTO linnad(linnanimi, rahvaarv)
+VALUES ('Tartu', 600000);
+
+INSERT INTO linnad(linnanimi, rahvaarv)
+VALUES ('Pärnu', 400000);
+
+
+SELECT * FROM linnad;
+SELECT * FROM logi;
+
+
+USE [triggerTARgv24]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER TRIGGER [dbo].[LinnaLisamine2] 
+ON [dbo].[linnad]
+AFTER INSERT
+AS
+BEGIN
+    INSERT INTO logi(kasutaja, aeg, toiming, andmed)
+    SELECT 
+	SUSER_NAME(),
+        GETDATE(),
+        'on tehtud insert käsk',
+        CONCAT('Linn:', inserted.linnanimi, ',elanike arv:', inserted.rahvaarv)
+    FROM inserted;
+END;
+
+
+CREATE TRIGGER LinnaKasutamine 
+ON linnad 
+FOR UPDATE
+AS
+INSERT INTO logi(kasutaja, aeg, toiming, andmed)
+SELECT
+    USER_NAME(), 
+    GETDATE(), 
+    'on tehtud UPDATE käsk',
+    CONCAT(
+        'vanad andmed - linn: ', deleted.linnanimi, 
+        ', elanike arv: ', deleted.rahvaarv,
+        ' | uued andmed - linn: ', inserted.linnanimi, 
+        ', elanike arv: ', inserted.rahvaarv
+    )
+FROM deleted
+INNER JOIN inserted ON deleted.linnID = inserted.linnID;
+
+
